@@ -1,8 +1,15 @@
-import Vue from "vue";
-import App from "./App.vue";
+import "@okta/okta-signin-widget/dist/css/okta-sign-in.min.css";
 
-Vue.config.productionTip = false;
+import Auth from "./Auth";
+import ImplicitCallback from "./components/ImplicitCallback.vue";
 
-new Vue({
-  render: h => h(App)
-}).$mount("#app");
+function install(Vue, options) {
+  Vue.component("ImplicitCallback", ImplicitCallback);
+  Auth(Vue, options);
+}
+
+function handleCallback() {
+  return ImplicitCallback;
+}
+
+export default { install, handleCallback };

@@ -8,6 +8,8 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@okta/configuration-validation": "^0.4.1",
+    "@okta/okta-signin-widget": "^3.4.2",
     "core-js": "^3.3.2",
     "vue": "^2.6.10"
   },
