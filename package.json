@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
+    "build": "vue-cli-service build --target lib ./src/main.js",
     "lint": "vue-cli-service lint"
   },
+  "main": "./dist/vue-okta-signin-widget.common.js",
   "dependencies": {
     "@okta/configuration-validation": "^0.4.1",
     "@okta/okta-signin-widget": "^3.4.2",
