@@ -68,6 +68,11 @@ function install(Vue, options) {
       authClient.tokenManager.clear();
       // store.dispatch(options.stateNamespace + options.stateActions.logout);
     },
+    async accessTokenExpired() {
+      await store.dispatch(
+        options.stateNamespace + options.stateActions.tokenExpired
+      );
+    },
     /**
      * setUser
      * dispatchs setUser action

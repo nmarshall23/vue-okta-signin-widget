@@ -14,7 +14,8 @@ async function handleIdTokenExpired(tokenManager, $auth) {
 
 async function handleAccessTokenExpired(tokenManager, $auth) {
   if (!(await $auth.isAuthenticated())) {
-    $auth.logout();
+    await $auth.logout();
+    await $auth.accessTokenExpired();
   }
   // if (await $auth.isAuthenticated()) {
   //   await tokenManager.renew("accessToken");
@@ -58,7 +59,8 @@ export function initOptions(options) {
   options.stateNamespace = options.stateNamespace || "auth/";
   options.stateActions = options.stateActions || {
     logout: "logOut",
-    setUser: "setUser"
+    setUser: "setUser",
+    tokenExpired: "tokenExpired"
   };
 
   options.afterLogInUrl = options.afterLogInUrl || "/";
