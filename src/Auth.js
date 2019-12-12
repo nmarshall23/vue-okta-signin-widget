@@ -74,6 +74,12 @@ function install(Vue, options) {
       );
     },
     /**
+     * Run only once after login
+     */
+    async postLogIn() {
+      store.dispatch(options.stateNamespace + options.stateActions.postLogIn);
+    },
+    /**
      * setUser
      * dispatchs setUser action
      */

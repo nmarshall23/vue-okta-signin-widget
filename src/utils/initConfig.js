@@ -60,7 +60,8 @@ export function initOptions(options) {
   options.stateActions = options.stateActions || {
     logout: "logOut",
     setUser: "setUser",
-    tokenExpired: "tokenExpired"
+    tokenExpired: "tokenExpired",
+    postLogIn: "postLogIn"
   };
 
   options.afterLogInUrl = options.afterLogInUrl || "/";
