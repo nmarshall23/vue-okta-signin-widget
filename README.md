@@ -2,14 +2,25 @@
 
 A Vueified Wrapper around okta-signin-widget.
 
-This 
+## Features
+
+
+
+Example Config:
 
 ```js
 Vue.use(Auth, {
+  routing: {
+    afterLogInUrl: '/dashboard',
+    logInUrl: '/logIn',
+  },
+  store, // copy of your Vuex.Store Object
   stateNamespace: 'auth/',
   stateActions: {
     logout: 'logout',
     setUser: 'setUser',
+    tokenExpired: "tokenExpired",
+    postLogIn: "postLogIn"
   },
   oktaSignIn: {
     redirectUri: window.location.origin + '/implicit/callback',
@@ -37,24 +48,25 @@ Vue.use(Auth, {
 ```
 
 ## Project setup
-```
+
+```cli
 yarn install
 ```
 
 ### Compiles and hot-reloads for development
-```
+
+```cli
 yarn serve
 ```
 
 ### Compiles and minifies for production
-```
+
+```cli
 yarn build
 ```
 
 ### Lints and fixes files
-```
+
+```cli
 yarn lint
 ```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).

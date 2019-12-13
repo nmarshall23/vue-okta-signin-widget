@@ -1,21 +1,23 @@
 import OktaSignIn from "@okta/okta-signin-widget/dist/js/okta-sign-in.min";
-import initConfig, { initOptions } from "./utils/initConfig";
+import initConfig, { initOptions, makeVuexActions } from "./utils/initConfig";
 
 function install(Vue, options) {
   options = initOptions(options);
-  console.log("options %o", options);
+  // console.log("options %o", options);
   const authConfig = initConfig(options.oktaSignIn);
-  console.log("authConfig %o", authConfig);
+  // console.log("authConfig %o", authConfig);
   const oktaSignIn = new OktaSignIn(authConfig);
   const { authClient } = oktaSignIn;
-  const { store } = options;
+  const vuexActions = makeVuexActions(options);
+  console.log("vuexActions %o", vuexActions);
 
-  console.log("authClient %o", authClient);
+  // console.log("authClient %o", authClient);
 
   // Triggered when the token has expired
+  // eslint-disable-next-line no-unused-vars
   authClient.tokenManager.on("expired", async (key, expiredToken) => {
     console.warn("Token with key", key, " has expired.");
-    console.log(expiredToken);
+    // console.log(expiredToken);
     switch (key) {
       case "idToken":
         await options.handleIdTokenExpired(
@@ -33,11 +35,11 @@ function install(Vue, options) {
         break;
     }
   });
-
+  // eslint-disable-next-line no-unused-vars
   authClient.tokenManager.on("renewed", async (key, newToken, oldToken) => {
     console.log("Token with key", key, "has been renewed");
-    console.info("Old token:", oldToken);
-    console.info("New token:", newToken);
+    // console.info("Old token:", oldToken);
+    // console.info("New token:", newToken);
     await Vue.prototype.$auth.setUser();
   });
 
@@ -57,6 +59,7 @@ function install(Vue, options) {
 
   // eslint-disable-next-line no-param-reassign
   Vue.prototype.$auth = {
+    vuexActions,
     /**
      * Logout
      * dispatchs logout action.
@@ -66,18 +69,15 @@ function install(Vue, options) {
         await authClient.signOut();
       }
       authClient.tokenManager.clear();
-      // store.dispatch(options.stateNamespace + options.stateActions.logout);
     },
     async accessTokenExpired() {
-      await store.dispatch(
-        options.stateNamespace + options.stateActions.tokenExpired
-      );
+      await vuexActions.tokenExpired();
     },
     /**
      * Run only once after login
      */
     async postLogIn() {
-      store.dispatch(options.stateNamespace + options.stateActions.postLogIn);
+      await vuexActions.postLogIn();
     },
     /**
      * setUser
@@ -87,10 +87,7 @@ function install(Vue, options) {
       const currentUser = await this.getUser();
       if (currentUser !== undefined || currentUser !== null) {
         currentUser.token = await this.getAccessToken();
-        store.dispatch(
-          options.stateNamespace + options.stateActions.setUser,
-          currentUser
-        );
+        await vuexActions.setUser(currentUser);
         return true;
       }
       return false;
@@ -98,12 +95,12 @@ function install(Vue, options) {
     renderSignInWidget(el) {
       oktaSignIn.renderEl({ el });
     },
-    async loginRedirect(fromUri) {
-      if (fromUri) {
-        localStorage.setItem("referrerPath", fromUri);
-      }
-      return "/"; //authClient.token.getWithRedirect(authConfig);
-    },
+    // async loginRedirect(fromUri) {
+    //   if (fromUri) {
+    //     localStorage.setItem("referrerPath", fromUri);
+    //   }
+    //   return "/"; //authClient.token.getWithRedirect(authConfig);
+    // },
     async isAuthenticated() {
       try {
         return !!(await this.getAccessToken()) || !!(await this.getIdToken());
@@ -125,12 +122,14 @@ function install(Vue, options) {
           }
         });
       } catch (error) {
-        console.warn("error %o", error);
+        console.warn("Authentication error %o", error);
       }
     },
     getFromUri() {
       const path =
-        localStorage.getItem("referrerPath") || options.afterLogInUrl || "/";
+        localStorage.getItem("referrerPath") ||
+        options.routing.afterLogInUrl ||
+        "/";
       localStorage.removeItem("referrerPath");
       console.info("getFromUri - path %o", path);
       return path;
@@ -176,8 +175,11 @@ function install(Vue, options) {
           to.matched.some(record => record.meta.requiresAuth) &&
           !(await this.isAuthenticated())
         ) {
-          console.info("authRedirectGuard is not Auth - path %o", to.path);
-          this.loginRedirect(to.path);
+          // console.info("authRedirectGuard is not Auth - path %o", to.path);
+          if (to.path) {
+            localStorage.setItem("referrerPath", to.path);
+          }
+          next(options.routing.logInUrl);
         } else {
           next();
         }

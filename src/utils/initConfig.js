@@ -49,6 +49,46 @@ export default function initConfig(options) {
   return options;
 }
 
+function setVuexAction(store, stateNamespace, stateAction) {
+  if (store && store.constructor.name === "Store") {
+    if (stateAction) {
+      return data => store.dispatch(stateNamespace + stateAction, data);
+    }
+  }
+  return () => {};
+}
+
+export function makeVuexActions(options) {
+  const actions = {
+    logout: setVuexAction(
+      options.store,
+      options.stateNamespace,
+      options.stateActions.logout
+    ),
+    setUser: setVuexAction(
+      options.store,
+      options.stateNamespace,
+      options.stateActions.setUser
+    ),
+    tokenExpired: setVuexAction(
+      options.store,
+      options.stateNamespace,
+      options.stateActions.tokenExpired
+    ),
+    postLogIn: setVuexAction(
+      options.store,
+      options.stateNamespace,
+      options.stateActions.postLogIn
+    )
+  };
+
+  if (!options.store || !(options.store.constructor.name === "Store")) {
+    console.warn("No Store Found no actions will be taken");
+  }
+
+  return actions;
+}
+
 export function initOptions(options) {
   options.handleAccessTokenExpired =
     options.handleAccessTokenExpired || handleAccessTokenExpired;
@@ -57,13 +97,14 @@ export function initOptions(options) {
     options.handleIdTokenExpired || handleIdTokenExpired;
 
   options.stateNamespace = options.stateNamespace || "auth/";
-  options.stateActions = options.stateActions || {
-    logout: "logOut",
-    setUser: "setUser",
-    tokenExpired: "tokenExpired",
-    postLogIn: "postLogIn"
-  };
+  // options.stateActions = options.stateActions || {
+  //   logout: "logOut",
+  //   setUser: "setUser",
+  //   tokenExpired: "tokenExpired",
+  //   postLogIn: "postLogIn"
+  // };
 
-  options.afterLogInUrl = options.afterLogInUrl || "/";
+  options.routing.afterLogInUrl = options.routing.afterLogInUrl || "/";
+  options.routing.logInUrl = options.routing.logInUrl || "/logIn";
   return options;
 }
