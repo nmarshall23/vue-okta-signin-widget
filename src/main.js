@@ -8,8 +8,4 @@ function install(Vue, options) {
   Auth(Vue, options);
 }
 
-function handleCallback() {
-  return ImplicitCallback;
-}
-
-export default { install, handleCallback };
+export default { install, ImplicitCallback };

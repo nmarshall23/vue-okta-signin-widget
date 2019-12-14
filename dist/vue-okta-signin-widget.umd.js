@@ -8352,13 +8352,9 @@ function main_install(Vue, options) {
   Auth(Vue, options);
 }
 
-function handleCallback() {
-  return ImplicitCallback;
-}
-
 /* harmony default export */ var main = ({
   install: main_install,
-  handleCallback: handleCallback
+  ImplicitCallback: ImplicitCallback
 });
 // CONCATENATED MODULE: ./node_modules/@vue/cli-service/lib/commands/build/entry-lib.js
 
