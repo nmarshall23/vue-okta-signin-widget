@@ -1,16 +1,13 @@
 <script>
 export default {
-  name: 'ImplicitCallback',
+  name: "ImplicitCallback",
   async beforeMount() {
-    await this.$auth.handleAuthentication();
+    await this.$auth._handleAuthentication();
     await this.$nextTick();
     if (this.$auth.isAuthenticated()) {
-      await this.$auth.setUser();
-      await this.$auth.postLogIn();
+      await this.$auth._setUser();
+      await this.$auth.vuexActions.afterLogIn(this.$router);
     }
-    this.$router.replace({
-      path: this.$auth.getFromUri()
-    });
   },
   render(h) {
     return h();

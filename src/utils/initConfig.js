@@ -5,23 +5,10 @@ import {
   buildConfigObject
 } from "@okta/configuration-validation";
 
-// eslint-disable-next-line
-async function handleIdTokenExpired(tokenManager, $auth) {
+async function handleTokenExpired($auth) {
   if (!(await $auth.isAuthenticated())) {
-    $auth.logout();
+    $auth.logOut();
   }
-}
-
-async function handleAccessTokenExpired(tokenManager, $auth) {
-  if (!(await $auth.isAuthenticated())) {
-    await $auth.logout();
-    await $auth.accessTokenExpired();
-  }
-  // if (await $auth.isAuthenticated()) {
-  //   await tokenManager.renew("accessToken");
-  // } else {
-  //   $auth.logout();
-  // }
 }
 
 export default function initConfig(options) {
@@ -51,60 +38,52 @@ export default function initConfig(options) {
 
 function setVuexAction(store, stateNamespace, stateAction) {
   if (store && store.constructor.name === "Store") {
-    if (stateAction) {
-      return data => store.dispatch(stateNamespace + stateAction, data);
+    if (typeof stateAction === "function") {
+      return stateAction;
+    } else if (typeof stateAction === "string") {
+      return data => store.dispatch(`${stateNamespace}/${stateAction}`, data);
     }
   }
   return () => {};
 }
 
 export function makeVuexActions(options) {
-  const actions = {
-    logout: setVuexAction(
-      options.store,
-      options.stateNamespace,
-      options.stateActions.logout
-    ),
-    setUser: setVuexAction(
-      options.store,
-      options.stateNamespace,
-      options.stateActions.setUser
-    ),
-    tokenExpired: setVuexAction(
-      options.store,
-      options.stateNamespace,
-      options.stateActions.tokenExpired
-    ),
-    postLogIn: setVuexAction(
-      options.store,
-      options.stateNamespace,
-      options.stateActions.postLogIn
-    )
+  const defaultActions = {
+    logOut: false,
+    /**
+     * Run everytime user is updated.
+     */
+    setUser: false,
+    /**
+     * Run only once after login
+     */
+    afterLogIn: router => router.push("/"),
+    setAccessToken: false,
+    setIdToken: false,
+    authRedirect: ({ next }) => next("/"),
+    onAccessTokenExpired: ({ $auth }) => handleTokenExpired($auth),
+    onIdTokenExpired: ({ $auth }) => handleTokenExpired($auth)
   };
+  const stateActions = Object.assign({}, defaultActions, options.stateActions);
 
-  if (!options.store || !(options.store.constructor.name === "Store")) {
-    console.warn("No Store Found no actions will be taken");
+  const vuexActions = {};
+  for (let i in stateActions) {
+    vuexActions[i] = setVuexAction(
+      options.store,
+      options.stateNamespace,
+      stateActions[i]
+    );
   }
 
-  return actions;
+  if (!options.store || !(options.store.constructor.name === "Store")) {
+    console.warn("No Vuex Store Found. No actions will be taken");
+  }
+
+  return vuexActions;
 }
 
 export function initOptions(options) {
-  options.handleAccessTokenExpired =
-    options.handleAccessTokenExpired || handleAccessTokenExpired;
+  options.stateNamespace = options.stateNamespace || "auth";
 
-  options.handleIdTokenExpired =
-    options.handleIdTokenExpired || handleIdTokenExpired;
-
-  options.stateNamespace = options.stateNamespace || "auth/";
-  // options.stateActions = options.stateActions || {
-  //   logout: "logOut",
-  //   setUser: "setUser",
-  //   tokenExpired: "tokenExpired",
-  //   postLogIn: "postLogIn"
-  // };
-
-  options.routing.afterLogInUrl = options.routing.afterLogInUrl || "/";
-  options.routing.logInUrl = options.routing.logInUrl || "/logIn";
   return options;
 }

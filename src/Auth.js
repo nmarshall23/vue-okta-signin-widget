@@ -9,29 +9,28 @@ function install(Vue, options) {
   const oktaSignIn = new OktaSignIn(authConfig);
   const { authClient } = oktaSignIn;
   const vuexActions = makeVuexActions(options);
-  console.log("vuexActions %o", vuexActions);
 
   // console.log("authClient %o", authClient);
 
   // Triggered when the token has expired
   // eslint-disable-next-line no-unused-vars
-  authClient.tokenManager.on("expired", async (key, expiredToken) => {
+  authClient.tokenManager.on("expired", (key, expiredToken) => {
     console.warn("Token with key", key, " has expired.");
     // console.log(expiredToken);
+    const params = {
+      tokenManager: authClient.tokenManager,
+      $auth: Vue.prototype.$auth,
+      expiredToken
+    };
+
     switch (key) {
       case "idToken":
-        await options.handleIdTokenExpired(
-          authClient.tokenManager,
-          Vue.prototype.$auth
-        );
+        vuexActions.onIdTokenExpired(params);
         break;
 
       case "accessToken":
       default:
-        await options.handleAccessTokenExpired(
-          authClient.tokenManager,
-          Vue.prototype.$auth
-        );
+        vuexActions.onAccessTokenExpired(params);
         break;
     }
   });
@@ -40,7 +39,16 @@ function install(Vue, options) {
     console.log("Token with key", key, "has been renewed");
     // console.info("Old token:", oldToken);
     // console.info("New token:", newToken);
-    await Vue.prototype.$auth.setUser();
+    switch (key) {
+      case "idToken":
+        vuexActions.setIdToken(newToken);
+        break;
+
+      case "accessToken":
+      default:
+        vuexActions.setAccessToken(newToken);
+        break;
+    }
   });
 
   // Triggered when an OAuthError is returned via the API
@@ -53,54 +61,65 @@ function install(Vue, options) {
 
     if (err.errorCode === "login_required") {
       // Return to unauthenticated state
-      Vue.prototype.$auth.logout();
+      Vue.prototype.$auth.logOut();
     }
   });
 
   // eslint-disable-next-line no-param-reassign
   Vue.prototype.$auth = {
+    /******************* Internal API *********/
+    /**
+     * The vuexAction are internal API
+     */
     vuexActions,
     /**
-     * Logout
-     * dispatchs logout action.
-     */
-    async logout() {
-      if (await this.isAuthenticated()) {
-        await authClient.signOut();
-      }
-      authClient.tokenManager.clear();
-    },
-    async accessTokenExpired() {
-      await vuexActions.tokenExpired();
-    },
-    /**
-     * Run only once after login
-     */
-    async postLogIn() {
-      await vuexActions.postLogIn();
-    },
-    /**
      * setUser
-     * dispatchs setUser action
+     * Gets user from Okta
+     * Sets accessToken to `currentUser.token`
+     * dispatchs setUser action with currentUser
      */
-    async setUser() {
+    async _setUser() {
       const currentUser = await this.getUser();
       if (currentUser !== undefined || currentUser !== null) {
-        currentUser.token = await this.getAccessToken();
+        // currentUser.token = await this.getAccessToken();
         await vuexActions.setUser(currentUser);
         return true;
       }
       return false;
     },
+    async _handleAuthentication() {
+      try {
+        const tokens = await authClient.token.parseFromUrl();
+        tokens.forEach(token => {
+          if (token.accessToken) {
+            authClient.tokenManager.add("accessToken", token);
+            vuexActions.setAccessToken(token.accessToken);
+          }
+          if (token.idToken) {
+            authClient.tokenManager.add("idToken", token);
+            vuexActions.setIdToken(token.idToken);
+          }
+        });
+      } catch (error) {
+        console.warn("Authentication error %o", error);
+      }
+    },
+    /******** Public API  *********/
+    /**
+     * Clear Token tokenManager
+     * Dispatch logOut Action
+     */
+    async logOut() {
+      if (await this.isAuthenticated()) {
+        await authClient.signOut();
+      }
+      authClient.tokenManager.clear();
+      await vuexActions.logOut();
+    },
+
     renderSignInWidget(el) {
       oktaSignIn.renderEl({ el });
     },
-    // async loginRedirect(fromUri) {
-    //   if (fromUri) {
-    //     localStorage.setItem("referrerPath", fromUri);
-    //   }
-    //   return "/"; //authClient.token.getWithRedirect(authConfig);
-    // },
     async isAuthenticated() {
       try {
         return !!(await this.getAccessToken()) || !!(await this.getIdToken());
@@ -110,30 +129,7 @@ function install(Vue, options) {
       }
       return false;
     },
-    async handleAuthentication() {
-      try {
-        const tokens = await authClient.token.parseFromUrl();
-        tokens.forEach(token => {
-          if (token.accessToken) {
-            authClient.tokenManager.add("accessToken", token);
-          }
-          if (token.idToken) {
-            authClient.tokenManager.add("idToken", token);
-          }
-        });
-      } catch (error) {
-        console.warn("Authentication error %o", error);
-      }
-    },
-    getFromUri() {
-      const path =
-        localStorage.getItem("referrerPath") ||
-        options.routing.afterLogInUrl ||
-        "/";
-      localStorage.removeItem("referrerPath");
-      console.info("getFromUri - path %o", path);
-      return path;
-    },
+
     async getIdToken() {
       try {
         const idToken = await authClient.tokenManager.get("idToken");
@@ -176,10 +172,7 @@ function install(Vue, options) {
           !(await this.isAuthenticated())
         ) {
           // console.info("authRedirectGuard is not Auth - path %o", to.path);
-          if (to.path) {
-            localStorage.setItem("referrerPath", to.path);
-          }
-          next(options.routing.logInUrl);
+          await vuexActions.authRedirect({ to, from, next });
         } else {
           next();
         }
