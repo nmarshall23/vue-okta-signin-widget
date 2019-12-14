@@ -15,7 +15,7 @@ function install(Vue, options) {
   // Triggered when the token has expired
   // eslint-disable-next-line no-unused-vars
   authClient.tokenManager.on("expired", (key, expiredToken) => {
-    console.warn("Token with key", key, " has expired.");
+    // console.warn("Token with key", key, " has expired.");
     // console.log(expiredToken);
     const params = {
       tokenManager: authClient.tokenManager,
@@ -36,17 +36,17 @@ function install(Vue, options) {
   });
   // eslint-disable-next-line no-unused-vars
   authClient.tokenManager.on("renewed", async (key, newToken, oldToken) => {
-    console.log("Token with key", key, "has been renewed");
+    // console.log("Token with key", key, "has been renewed");
     // console.info("Old token:", oldToken);
     // console.info("New token:", newToken);
     switch (key) {
       case "idToken":
-        vuexActions.setIdToken(newToken);
+        vuexActions.setIdToken(newToken.idToken);
         break;
 
       case "accessToken":
       default:
-        vuexActions.setAccessToken(newToken);
+        vuexActions.setAccessToken(newToken.accessToken);
         break;
     }
   });
@@ -124,8 +124,9 @@ function install(Vue, options) {
       try {
         return !!(await this.getAccessToken()) || !!(await this.getIdToken());
       } catch (error) {
-        console.error("isAuthenticated Error");
-        console.error(error);
+        // console.error("isAuthenticated Error");
+        // console.error(error);
+        await vuexActions.onAuthError({ error });
       }
       return false;
     },

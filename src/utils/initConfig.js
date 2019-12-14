@@ -6,9 +6,15 @@ import {
 } from "@okta/configuration-validation";
 
 async function handleTokenExpired($auth) {
+  // console.warn("Token with key", key, " has expired.");
   if (!(await $auth.isAuthenticated())) {
     $auth.logOut();
   }
+}
+
+function handleAuthError({ error }) {
+  console.error("isAuthenticated Error");
+  console.error(error);
 }
 
 export default function initConfig(options) {
@@ -60,6 +66,7 @@ export function makeVuexActions(options) {
     afterLogIn: router => router.push("/"),
     setAccessToken: false,
     setIdToken: false,
+    onAuthError: handleAuthError,
     authRedirect: ({ next }) => next("/"),
     onAccessTokenExpired: ({ $auth }) => handleTokenExpired($auth),
     onIdTokenExpired: ({ $auth }) => handleTokenExpired($auth)

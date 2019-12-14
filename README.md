@@ -1,6 +1,6 @@
 # vue-okta-signin-widget
 
-A Vue plugin for okta-signin-widget, and Auth Handling.
+Vue plugin for okta-signin-widget, and Auth Handling.
 
 This library only handles OpenID Connect redirect flow.
 
@@ -72,7 +72,13 @@ In your login component add:
 mounted() {
   this.$auth.renderSignInWidget('#osw-container')
 },
-``
+```
+
+Lastly add a router guard.
+
+```js
+router.beforeEach(Vue.prototype.$auth.authRedirectGuard())
+```
 
 ## Project setup
 
