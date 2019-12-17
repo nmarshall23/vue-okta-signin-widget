@@ -41,14 +41,20 @@ export default function initConfig(options) {
 
   return options;
 }
+function setVuexAction(
+  store,
+  stateNamespace,
+  stateAction,
+  defaultCallbackParams
+) {
+  const actionParams = dataObj =>
+    Object.assign({}, defaultCallbackParams, dataObj);
 
-function setVuexAction(store, stateNamespace, stateAction) {
-  if (store && store.constructor.name === "Store") {
-    if (typeof stateAction === "function") {
-      return stateAction;
-    } else if (typeof stateAction === "string") {
-      return data => store.dispatch(`${stateNamespace}/${stateAction}`, data);
-    }
+  if (typeof stateAction === "function") {
+    return data => stateAction(actionParams(data));
+  } else if (typeof stateAction === "string") {
+    return data =>
+      store.dispatch(`${stateNamespace}/${stateAction}`, actionParams(data));
   }
   return () => {};
 }
@@ -63,7 +69,7 @@ export function makeVuexActions(options) {
     /**
      * Run only once after login
      */
-    afterLogIn: router => router.push("/"),
+    afterLogIn: ({ router }) => router.push("/"),
     setAccessToken: false,
     setIdToken: false,
     onAuthError: handleAuthError,
@@ -74,15 +80,14 @@ export function makeVuexActions(options) {
   const stateActions = Object.assign({}, defaultActions, options.stateActions);
 
   const vuexActions = {};
-  for (let i in stateActions) {
-    vuexActions[i] = setVuexAction(
-      options.store,
-      options.stateNamespace,
-      stateActions[i]
-    );
-  }
 
-  if (!options.store || !(options.store.constructor.name === "Store")) {
+  if (options.store !== undefined) {
+    const { store, stateNamespace } = options;
+
+    for (let i in stateActions) {
+      vuexActions[i] = setVuexAction(store, stateNamespace, stateActions[i]);
+    }
+  } else {
     console.warn("No Vuex Store Found. No actions will be taken");
   }
 

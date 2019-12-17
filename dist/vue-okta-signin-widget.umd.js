@@ -4894,35 +4894,6 @@ module.exports = baseUnary;
 
 /***/ }),
 
-/***/ "b0c0":
-/***/ (function(module, exports, __webpack_require__) {
-
-var DESCRIPTORS = __webpack_require__("83ab");
-var defineProperty = __webpack_require__("9bf2").f;
-
-var FunctionPrototype = Function.prototype;
-var FunctionPrototypeToString = FunctionPrototype.toString;
-var nameRE = /^\s*function ([^ (]*)/;
-var NAME = 'name';
-
-// Function instances `.name` property
-// https://tc39.github.io/ecma262/#sec-function-instances-name
-if (DESCRIPTORS && !(NAME in FunctionPrototype)) {
-  defineProperty(FunctionPrototype, NAME, {
-    configurable: true,
-    get: function () {
-      try {
-        return FunctionPrototypeToString.call(this).match(nameRE)[1];
-      } catch (error) {
-        return '';
-      }
-    }
-  });
-}
-
-
-/***/ }),
-
 /***/ "b0c4":
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -7644,9 +7615,6 @@ var es_array_concat = __webpack_require__("99af");
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es.array.index-of.js
 var es_array_index_of = __webpack_require__("c975");
 
-// EXTERNAL MODULE: ./node_modules/core-js/modules/es.function.name.js
-var es_function_name = __webpack_require__("b0c0");
-
 // EXTERNAL MODULE: ./node_modules/core-js/modules/es.object.assign.js
 var es_object_assign = __webpack_require__("cca6");
 
@@ -7657,7 +7625,6 @@ var es_string_split = __webpack_require__("1276");
 var lib = __webpack_require__("f222");
 
 // CONCATENATED MODULE: ./src/utils/initConfig.js
-
 
 
 
@@ -7721,15 +7688,19 @@ function initConfig(options) {
   return options;
 }
 
-function setVuexAction(store, stateNamespace, stateAction) {
-  if (store && store.constructor.name === "Store") {
-    if (typeof stateAction === "function") {
-      return stateAction;
-    } else if (typeof stateAction === "string") {
-      return function (data) {
-        return store.dispatch("".concat(stateNamespace, "/").concat(stateAction), data);
-      };
-    }
+function setVuexAction(store, stateNamespace, stateAction, defaultCallbackParams) {
+  var actionParams = function actionParams(dataObj) {
+    return Object.assign({}, defaultCallbackParams, dataObj);
+  };
+
+  if (typeof stateAction === "function") {
+    return function (data) {
+      return stateAction(actionParams(data));
+    };
+  } else if (typeof stateAction === "string") {
+    return function (data) {
+      return store.dispatch("".concat(stateNamespace, "/").concat(stateAction), actionParams(data));
+    };
   }
 
   return function () {};
@@ -7747,33 +7718,37 @@ function makeVuexActions(options) {
     /**
      * Run only once after login
      */
-    afterLogIn: function afterLogIn(router) {
+    afterLogIn: function afterLogIn(_ref2) {
+      var router = _ref2.router;
       return router.push("/");
     },
     setAccessToken: false,
     setIdToken: false,
     onAuthError: handleAuthError,
-    authRedirect: function authRedirect(_ref2) {
-      var next = _ref2.next;
+    authRedirect: function authRedirect(_ref3) {
+      var next = _ref3.next;
       return next("/");
     },
-    onAccessTokenExpired: function onAccessTokenExpired(_ref3) {
-      var $auth = _ref3.$auth;
+    onAccessTokenExpired: function onAccessTokenExpired(_ref4) {
+      var $auth = _ref4.$auth;
       return handleTokenExpired($auth);
     },
-    onIdTokenExpired: function onIdTokenExpired(_ref4) {
-      var $auth = _ref4.$auth;
+    onIdTokenExpired: function onIdTokenExpired(_ref5) {
+      var $auth = _ref5.$auth;
       return handleTokenExpired($auth);
     }
   };
   var stateActions = Object.assign({}, defaultActions, options.stateActions);
   var vuexActions = {};
 
-  for (var i in stateActions) {
-    vuexActions[i] = setVuexAction(options.store, options.stateNamespace, stateActions[i]);
-  }
+  if (options.store !== undefined) {
+    var store = options.store,
+        stateNamespace = options.stateNamespace;
 
-  if (!options.store || !(options.store.constructor.name === "Store")) {
+    for (var i in stateActions) {
+      vuexActions[i] = setVuexAction(store, stateNamespace, stateActions[i]);
+    }
+  } else {
     console.warn("No Vuex Store Found. No actions will be taken");
   }
 
@@ -7793,13 +7768,15 @@ function initOptions(options) {
 
 
 function install(Vue, options) {
-  options = initOptions(options); // console.log("options %o", options);
-
+  options = initOptions(options);
+  console.log("options %o", options);
   var authConfig = initConfig(options.oktaSignIn); // console.log("authConfig %o", authConfig);
 
   var oktaSignIn = new js_okta_sign_in_min_default.a(authConfig);
   var authClient = oktaSignIn.authClient;
-  var vuexActions = makeVuexActions(options); // console.log("authClient %o", authClient);
+  var vuexActions = makeVuexActions(options); // console.log("authClient %o vuexActions: %o", authClient, vuexActions);
+
+  console.log("vuexActions: %o", vuexActions); // console.log("authClient %o", authClient);
   // Triggered when the token has expired
   // eslint-disable-next-line no-unused-vars
 
@@ -7807,7 +7784,7 @@ function install(Vue, options) {
     // console.warn("Token with key", key, " has expired.");
     // console.log(expiredToken);
     var params = {
-      tokenManager: authClient.tokenManager,
+      // tokenManager: authClient.tokenManager,
       $auth: Vue.prototype.$auth,
       expiredToken: expiredToken
     };
@@ -7834,11 +7811,15 @@ function install(Vue, options) {
             break;
 
           case 3:
-            vuexActions.setIdToken(newToken.idToken);
+            vuexActions.setIdToken({
+              token: newToken.idToken
+            });
             return _context.abrupt("break", 7);
 
           case 5:
-            vuexActions.setAccessToken(newToken.accessToken);
+            vuexActions.setAccessToken({
+              token: newToken.accessToken
+            });
             return _context.abrupt("break", 7);
 
           case 7:
@@ -7893,7 +7874,9 @@ function install(Vue, options) {
               }
 
               _context2.next = 6;
-              return regeneratorRuntime.awrap(vuexActions.setUser(currentUser));
+              return regeneratorRuntime.awrap(vuexActions.setUser({
+                user: currentUser
+              }));
 
             case 6:
               return _context2.abrupt("return", true);
@@ -7923,12 +7906,16 @@ function install(Vue, options) {
               tokens.forEach(function (token) {
                 if (token.accessToken) {
                   authClient.tokenManager.add("accessToken", token);
-                  vuexActions.setAccessToken(token.accessToken);
+                  vuexActions.setAccessToken({
+                    token: token.accessToken
+                  });
                 }
 
                 if (token.idToken) {
                   authClient.tokenManager.add("idToken", token);
-                  vuexActions.setIdToken(token.idToken);
+                  vuexActions.setIdToken({
+                    token: token.idToken
+                  });
                 }
               });
               _context3.next = 10;
@@ -8212,7 +8199,9 @@ function install(Vue, options) {
 
           case 7:
             _context.next = 9;
-            return regeneratorRuntime.awrap(this.$auth.vuexActions.afterLogIn(this.$router));
+            return regeneratorRuntime.awrap(this.$auth.vuexActions.afterLogIn({
+              router: this.$router
+            }));
 
           case 9:
           case "end":

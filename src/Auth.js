@@ -3,13 +3,16 @@ import initConfig, { initOptions, makeVuexActions } from "./utils/initConfig";
 
 function install(Vue, options) {
   options = initOptions(options);
-  // console.log("options %o", options);
+  console.log("options %o", options);
   const authConfig = initConfig(options.oktaSignIn);
   // console.log("authConfig %o", authConfig);
   const oktaSignIn = new OktaSignIn(authConfig);
   const { authClient } = oktaSignIn;
+
   const vuexActions = makeVuexActions(options);
 
+  // console.log("authClient %o vuexActions: %o", authClient, vuexActions);
+  console.log("vuexActions: %o", vuexActions);
   // console.log("authClient %o", authClient);
 
   // Triggered when the token has expired
@@ -18,7 +21,7 @@ function install(Vue, options) {
     // console.warn("Token with key", key, " has expired.");
     // console.log(expiredToken);
     const params = {
-      tokenManager: authClient.tokenManager,
+      // tokenManager: authClient.tokenManager,
       $auth: Vue.prototype.$auth,
       expiredToken
     };
@@ -41,12 +44,12 @@ function install(Vue, options) {
     // console.info("New token:", newToken);
     switch (key) {
       case "idToken":
-        vuexActions.setIdToken(newToken.idToken);
+        vuexActions.setIdToken({ token: newToken.idToken });
         break;
 
       case "accessToken":
       default:
-        vuexActions.setAccessToken(newToken.accessToken);
+        vuexActions.setAccessToken({ token: newToken.accessToken });
         break;
     }
   });
@@ -82,7 +85,7 @@ function install(Vue, options) {
       const currentUser = await this.getUser();
       if (currentUser !== undefined || currentUser !== null) {
         // currentUser.token = await this.getAccessToken();
-        await vuexActions.setUser(currentUser);
+        await vuexActions.setUser({ user: currentUser });
         return true;
       }
       return false;
@@ -93,11 +96,11 @@ function install(Vue, options) {
         tokens.forEach(token => {
           if (token.accessToken) {
             authClient.tokenManager.add("accessToken", token);
-            vuexActions.setAccessToken(token.accessToken);
+            vuexActions.setAccessToken({ token: token.accessToken });
           }
           if (token.idToken) {
             authClient.tokenManager.add("idToken", token);
-            vuexActions.setIdToken(token.idToken);
+            vuexActions.setIdToken({ token: token.idToken });
           }
         });
       } catch (error) {
