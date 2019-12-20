@@ -73,6 +73,7 @@ export function makeVuexActions(options) {
     setAccessToken: false,
     setIdToken: false,
     onAuthError: handleAuthError,
+    onTokenError: false,
     authRedirect: ({ next }) => next("/"),
     onAccessTokenExpired: ({ $auth }) => handleTokenExpired($auth),
     onIdTokenExpired: ({ $auth }) => handleTokenExpired($auth)

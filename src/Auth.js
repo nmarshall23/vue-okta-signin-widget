@@ -61,10 +61,11 @@ function install(Vue, options) {
     // err.message
     // err.errorCode
     // err.errorSummary
-
+    vuexActions.onTokenError({ err });
     if (err.errorCode === "login_required") {
       // Return to unauthenticated state
-      Vue.prototype.$auth.logOut();
+      console.debug("TokenManager logout?");
+      // Vue.prototype.$auth.logOut();
     }
   });
 
@@ -122,6 +123,9 @@ function install(Vue, options) {
 
     renderSignInWidget(el) {
       oktaSignIn.renderEl({ el });
+    },
+    removeWidget() {
+      oktaSignIn.remove();
     },
     async isAuthenticated() {
       try {
