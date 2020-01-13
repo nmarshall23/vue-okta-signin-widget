@@ -4,6 +4,8 @@ Vue plugin for okta-signin-widget, and Auth Handling.
 
 This library only handles OpenID Connect redirect flow.
 
+Functionaly this works like [Okta Vue SDK](https://github.com/okta/okta-oidc-js/tree/master/packages/okta-vue) with an embeded [Okta Sign-In Widget](https://github.com/okta/okta-signin-widget)
+
 ## Features
 
 Dispaches Vuex actions on Auth events.
@@ -58,11 +60,6 @@ Vue.use(Auth, {
     features: {
       rememberMe: false
     },
-    tokenManager: {
-      expireEarlySeconds: 120,
-      redirectUri: "/login"
-      // autoRenew: true
-    }
   }
 });
 ```

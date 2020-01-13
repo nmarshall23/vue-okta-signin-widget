@@ -115,7 +115,20 @@ function install(Vue, options) {
      */
     async logOut() {
       if (await this.isAuthenticated()) {
-        await authClient.signOut();
+        try {
+          await authClient.signOut();
+        } catch (err) {
+          switch (err.errorCode) {
+            case "E0000007":
+              // means that the session is expired
+              // that's normal
+              // eat this error.
+              break;
+
+            default:
+              throw err;
+          }
+        }
       }
       authClient.tokenManager.clear();
       await vuexActions.logOut();
