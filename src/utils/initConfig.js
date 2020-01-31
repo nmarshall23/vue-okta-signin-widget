@@ -62,6 +62,7 @@ function setVuexAction(
 export function makeVuexActions(options) {
   const defaultActions = {
     logOut: false,
+    loginRequired: false,
     /**
      * Run everytime user is updated.
      */
@@ -76,7 +77,7 @@ export function makeVuexActions(options) {
     onTokenError: false,
     authRedirect: ({ next }) => next("/"),
     onAccessTokenExpired: ({ $auth }) => handleTokenExpired($auth),
-    onIdTokenExpired: ({ $auth }) => handleTokenExpired($auth)
+    onIdTokenExpired: ({ $auth }) => handleTokenExpired($auth),
   };
   const stateActions = Object.assign({}, defaultActions, options.stateActions);
 

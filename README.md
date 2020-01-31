@@ -18,7 +18,7 @@ On a successful longin. ImplicitCallback will dispatch:
 
 When a token is renewed. `setAccessToken`, or `setIdToken` is dispatched with new token. `{ token }`
 
-When a token can no longer be renewed, and expires `logOut` is dispatched.
+When a token can no longer be renewed, and expires `login_required` is dispatched.
 
 Or when `$auth.logOut()` is called.
 
@@ -34,6 +34,7 @@ Vue.use(Auth, {
   // for example `${stateNamespace}/${logOut}` should be the logOut action.
   stateActions: {
     logOut: "logout", // No params
+    loginRequired: "loginRequired", // User must reauth as tokens have expired. 
     setUser: "setUser", // User Object in { user }
     setAccessToken: "setAccessToken", // This is your Auth Bearer Token.
     setIdToken: "setIdToken", // Id token

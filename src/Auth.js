@@ -61,11 +61,13 @@ function install(Vue, options) {
     // err.message
     // err.errorCode
     // err.errorSummary
-    vuexActions.onTokenError({ err });
     if (err.errorCode === "login_required") {
       // Return to unauthenticated state
       console.debug("TokenManager logout?");
+      vuexActions.loginRequired();
       // Vue.prototype.$auth.logOut();
+    } else {
+      vuexActions.onTokenError({ err });
     }
   });
 
