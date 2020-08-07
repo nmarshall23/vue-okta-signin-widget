@@ -4,12 +4,12 @@
   "private": true,
   "license": "MIT",
   "author": {
-    "name" : "Nicholas Marshall",
-    "email" : "nmarshall23@gmail.com"
+    "name": "Nicholas Marshall",
+    "email": "nmarshall23@gmail.com"
   },
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/nmarshall23/vue-okta-signin-widget"
+    "type": "git",
+    "url": "https://github.com/nmarshall23/vue-okta-signin-widget"
   },
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -18,21 +18,21 @@
   },
   "main": "./dist/vue-okta-signin-widget.common.js",
   "dependencies": {
-    "@okta/configuration-validation": "^0.4.1",
-    "@okta/okta-signin-widget": "^3.4.2",
-    "core-js": "^3.3.2",
+    "@okta/configuration-validation": "^0.4.3",
+    "@okta/okta-signin-widget": "^4.3.2",
+    "core-js": "^3.6.5",
     "vue": "^2.6.10"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^4.0.0",
-    "@vue/cli-plugin-eslint": "^4.0.0",
-    "@vue/cli-service": "^4.0.0",
-    "@vue/eslint-config-prettier": "^5.0.0",
-    "babel-eslint": "^10.0.3",
-    "eslint": "^5.16.0",
-    "eslint-plugin-prettier": "^3.1.1",
-    "eslint-plugin-vue": "^5.0.0",
-    "prettier": "^1.18.2",
+    "@vue/cli-plugin-babel": "^4.4.6",
+    "@vue/cli-plugin-eslint": "^4.4.6",
+    "@vue/cli-service": "^4.4.6",
+    "@vue/eslint-config-prettier": "^6.0.0",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^7.6.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-vue": "^6.2.2",
+    "prettier": "^2.0.5",
     "vue-template-compiler": "^2.6.10"
   }
 }
