@@ -23,7 +23,7 @@ function install(Vue, options) {
     const params = {
       // tokenManager: authClient.tokenManager,
       $auth: Vue.prototype.$auth,
-      expiredToken
+      expiredToken,
     };
 
     switch (key) {
@@ -55,7 +55,7 @@ function install(Vue, options) {
   });
 
   // Triggered when an OAuthError is returned via the API
-  authClient.tokenManager.on("error", err => {
+  authClient.tokenManager.on("error", (err) => {
     console.warn("TokenManager error:", err);
     // err.name
     // err.message
@@ -95,17 +95,16 @@ function install(Vue, options) {
     },
     async _handleAuthentication() {
       try {
-        const tokens = await authClient.token.parseFromUrl();
-        tokens.forEach(token => {
-          if (token.accessToken) {
-            authClient.tokenManager.add("accessToken", token);
-            vuexActions.setAccessToken({ token: token.accessToken });
-          }
-          if (token.idToken) {
-            authClient.tokenManager.add("idToken", token);
-            vuexActions.setIdToken({ token: token.idToken });
-          }
-        });
+        const { tokens } = await authClient.token.parseFromUrl();
+        // console.log("_handleAuthentication - tokens", tokens);
+        if (tokens.accessToken) {
+          authClient.tokenManager.add("accessToken", tokens.accessToken);
+          vuexActions.setAccessToken({ token: tokens.accessToken.value });
+        }
+        if (tokens.idToken) {
+          authClient.tokenManager.add("idToken", tokens.idToken);
+          vuexActions.setIdToken({ token: tokens.idToken.value });
+        }
       } catch (error) {
         console.warn("Authentication error %o", error);
       }
@@ -191,7 +190,7 @@ function install(Vue, options) {
     authRedirectGuard() {
       return async (to, from, next) => {
         if (
-          to.matched.some(record => record.meta.requiresAuth) &&
+          to.matched.some((record) => record.meta.requiresAuth) &&
           !(await this.isAuthenticated())
         ) {
           // console.info("authRedirectGuard is not Auth - path %o", to.path);
@@ -200,7 +199,7 @@ function install(Vue, options) {
           next();
         }
       };
-    }
+    },
   };
 }
 
